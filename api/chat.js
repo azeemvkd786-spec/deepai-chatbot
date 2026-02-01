@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     res.status(200).json({
-      reply: data.output || "I couldn't understand that."
+      reply: data.output || "Can you rephrase that in a simpler way?"
     });
 
   } catch (error) {
