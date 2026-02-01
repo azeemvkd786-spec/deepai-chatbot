@@ -1,35 +1,54 @@
+let memory = [];
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Only POST allowed" });
+    return res.status(405).json({ reply: "Only POST allowed" });
   }
 
   try {
     const { message } = req.body;
 
-    const response = await fetch("https://api.deepai.org/api/text-generator", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "api-key": process.env.DEEPAI_API_KEY
-  },
-  body: JSON.stringify({
-    text: `You are a helpful AI assistant.
+    memory.push(`User: ${message}`);
+    if (memory.length > 6) memory.shift();
+
+    const prompt = `
+You are a helpful AI assistant.
 Answer clearly and simply.
 
-User: ${message}
-AI:`
-  })
-    });
+Conversation so far:
+${memory.join("\n")}
+
+AI:
+`;
+
+    const formData = new URLSearchParams();
+    formData.append("text", prompt);
+
+    const response = await fetch(
+      "https://api.deepai.org/api/text-generator",
+      {
+        method: "POST",
+        headers: {
+          "api-key": process.env.DEEPAI_API_KEY
+        },
+        body: formData
+      }
+    );
 
     const data = await response.json();
 
-    res.status(200).json({
-      reply: data.output || "Can you rephrase that in a simpler way?"
-    });
+    const reply =
+      typeof data.output === "string" && data.output.trim() !== ""
+        ? data.output
+        : "I’m not sure I got that. Can you try asking differently?";
 
-  } catch (error) {
+    memory.push(`AI: ${reply}`);
+
+    res.status(200).json({ reply });
+
+  } catch (err) {
     res.status(500).json({
-      reply: "Server error. Try again."
+      reply: "Server error. Please try again."
     });
   }
 }
