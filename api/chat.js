@@ -7,14 +7,18 @@ export default async function handler(req, res) {
     const { message } = req.body;
 
     const response = await fetch("https://api.deepai.org/api/text-generator", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "api-key": process.env.DEEPAI_API_KEY
-      },
-      body: JSON.stringify({
-        text: message
-      })
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "api-key": process.env.DEEPAI_API_KEY
+  },
+  body: JSON.stringify({
+    text: `You are a helpful AI assistant.
+Answer clearly and simply.
+
+User: ${message}
+AI:`
+  })
     });
 
     const data = await response.json();
